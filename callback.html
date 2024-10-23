@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Callback</title>
+    <script>
+        // Function to get the access token from the URL
+        function getAccessToken() {
+            const hash = window.location.hash
+                .substring(1)
+                .split('&')
+                .reduce((acc, curr) => {
+                    const [key, value] = curr.split('=');
+                    acc[key] = decodeURIComponent(value);
+                    return acc;
+                }, {});
+                
+            window.location.hash = ''; 
+            const accessToken = hash.access_token; 
+
+            if (accessToken) {
+
+                localStorage.setItem('spotifyAccessToken', accessToken);
+
+                window.location.href = '/'; 
+            } else {
+                console.error('Access token not found.');
+
+            }
+        }
+
+        window.onload = getAccessToken;
+    </script>
+</head>
+<body>
+    <h1>Redirecting...</h1>
+</body>
+</html>
