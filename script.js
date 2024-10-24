@@ -1,14 +1,15 @@
-const clientId = 'f3b866d72de445f7bc49f6dac6e9d1eb';
-const redirectUri = 'https://t1devzeus.github.io/moodtunes/callback';
+const clientId = 'f3b866d72de445f7bc49f6dac6e9d1eb'; // Replace with your actual Spotify client ID
+const redirectUri = 'https://t1devzeus.github.io/moodtunes/callback'; // Your GitHub Pages callback URL
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 const scopes = ['playlist-modify-public', 'user-read-private'];
 
 // Spotify login function
 function loginToSpotify() {
+    // Redirect to Spotify login page
     window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join('%20')}&response_type=token&show_dialog=true`;
 }
 
-// Extract the access token from the URL after Spotify login
+// Extract the access token from the URL hash after Spotify login
 const hash = window.location.hash
     .substring(1)
     .split('&')
@@ -20,14 +21,7 @@ const hash = window.location.hash
 
 window.location.hash = ''; // Clear the token from the URL
 const accessToken = hash.access_token; // Store the access token
-
-// If the access token is undefined, redirect to Spotify login
-if (!accessToken) {
-    console.log('No access token found. Redirecting to Spotify login...');
-    loginToSpotify();
-} else {
-    console.log('Access Token:', accessToken); // Log to verify it's captured correctly
-}
+console.log('Access Token:', accessToken); // Log to verify it's captured correctly
 
 // Handle mood button clicks
 const moodButtons = document.querySelectorAll('.mood');
@@ -44,6 +38,7 @@ async function getPlaylistByMood(mood) {
     console.log('Fetching playlist for mood:', mood); // Log to track the function call
 
     try {
+        // Make the API call to Spotify's search endpoint
         const response = await fetch(`https://api.spotify.com/v1/search?q=${mood}&type=playlist&limit=1`, {
             headers: {
                 'Authorization': `Bearer ${accessToken}` // Add the access token to the request
@@ -58,6 +53,7 @@ async function getPlaylistByMood(mood) {
         const data = await response.json(); // Parse the JSON response
         console.log('API Response:', data); // Log the full response for debugging
 
+        // Ensure there is playlist data and display it
         if (data.playlists && data.playlists.items && data.playlists.items.length > 0) {
             displayPlaylist(data.playlists.items[0]);
         } else {
