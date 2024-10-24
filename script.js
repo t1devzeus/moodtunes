@@ -1,40 +1,56 @@
-const clientId = 'f3b866d72de445f7bc49f6dac6e9d1eb'; // Replace with your actual Spotify client ID
+// Spotify API Credentials
+const clientId = 'YOUR_CLIENT_ID'; // Replace with your actual Spotify Client ID
 const redirectUri = 'https://t1devzeus.github.io/moodtunes/callback'; // Your GitHub Pages callback URL
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 const scopes = ['playlist-modify-public', 'user-read-private'];
 
-// Spotify login function
+// Function to redirect user to Spotify login
 function loginToSpotify() {
-    // Redirect to Spotify login page
-    window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes.join('%20')}&response_type=token&show_dialog=true`;
+    const authorizationUrl = `${authEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}&response_type=token&show_dialog=true`;
+    window.location = authorizationUrl; // Redirect to Spotify
 }
 
-// Extract the access token from the URL hash after Spotify login
-const hash = window.location.hash
-    .substring(1)
-    .split('&')
-    .reduce((acc, curr) => {
+// Function to extract the access token from the URL hash
+function getAccessTokenFromUrl() {
+    const hash = window.location.hash; // Get the URL hash
+    const tokenData = hash.substring(1).split('&').reduce((acc, curr) => {
         const [key, value] = curr.split('=');
-        acc[key] = value;
+        acc[key] = decodeURIComponent(value); // Decode the token
         return acc;
     }, {});
 
-window.location.hash = ''; // Clear the token from the URL
-const accessToken = hash.access_token; // Store the access token
-console.log('Access Token:', accessToken); // Log to verify it's captured correctly
+    return tokenData.access_token; // Get the access token
+}
 
-// Handle mood button clicks
-const moodButtons = document.querySelectorAll('.mood');
-moodButtons.forEach(button => {
-    button.addEventListener('click', (event) => {
-        const mood = event.target.dataset.mood;
-        console.log('Selected mood:', mood); // Log the selected mood for debugging
-        getPlaylistByMood(mood); // Fetch playlist based on mood
+// Check for access token on page load
+window.onload = () => {
+    const accessToken = getAccessTokenFromUrl(); // Get the token
+    console.log('Access Token:', accessToken); // Log it for verification
+
+    // If accessToken exists, you can now use it to make API calls
+    if (accessToken) {
+        setupMoodButtons(accessToken); // Call function to set up mood buttons with access token
+    } else {
+        // If no access token, prompt user to log in
+        loginToSpotify();
+    }
+};
+
+// Function to set up mood buttons
+function setupMoodButtons(accessToken) {
+    const moodButtons = document.querySelectorAll('.mood');
+
+    moodButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const mood = event.target.dataset.mood;
+            console.log('Selected mood:', mood); // Log the selected mood for debugging
+            getPlaylistByMood(mood, accessToken); // Fetch playlist based on mood
+        });
     });
-});
+}
 
 // Function to fetch a playlist based on mood
-async function getPlaylistByMood(mood) {
+async function getPlaylistByMood(mood, accessToken) {
     console.log('Fetching playlist for mood:', mood); // Log to track the function call
 
     try {
